@@ -4,7 +4,7 @@ find_package(Imagine REQUIRED)
 project(Othello-Mopsi LANGUAGES CXX)
 
 add_executable(Othello-Mopsi main.cpp
-                gamedisplay.h gamedisplay.cpp
+                display.h display.cpp
                 settings.h settings.cpp
                 position.h position.cpp
                 game.h game.cpp)

@@ -60,8 +60,9 @@ void Position::setAvailable(int color) {
     }
 }
 
-bool Position::addChip(int posX_0, int posY_0, int &color) {
+void Position::addChip(int posX_0, int posY_0, int &color) {
     set(posX_0, posY_0, color);
+    lastChip = {posX_0, posY_0};
     for(vector<int> direction : DIRECTIONS){
         int posX = posX_0 + direction[0];
         int posY = posY_0 + direction[1];
@@ -83,16 +84,6 @@ bool Position::addChip(int posX_0, int posY_0, int &color) {
             }
         }
     }
-    color *= -1;
-    setAvailable(color);
-    if(noMove()) {
-        color *= -1;
-        setAvailable(color);
-        if(noMove()) {
-            return true;
-        }
-    }
-    return false;
 }
 
 bool Position::noMove() const {

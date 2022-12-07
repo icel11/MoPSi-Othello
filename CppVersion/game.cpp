@@ -1,7 +1,8 @@
 #include "game.h"
 #include <map>
+#include <limits.h>
 
-Game::Game()
+Game::Game(int aiColor)
 {
     vector<vector<int>> chips;
     for(int row = 0; row < 8; row++) {
@@ -13,7 +14,13 @@ Game::Game()
     chips[4][3] = 1;
     chips[4][4] = -1;
     gamePosition = Position(chips, turn);
+    this->aiColor = aiColor;
     draw();
+}
+
+void Game::changeTurn() {
+    turn *= -1;
+    gamePosition.setAvailable(turn);
 }
 
 
@@ -54,7 +61,7 @@ pair<Position, int> Game::calculateMovement(Position position, int color, int de
         if(possibleMouvements.empty()) {
             return make_pair(position, calculateScore(position, color));
         }
-        pair<Position, int> bestMouvement = make_pair(Position(), -64);
+        pair<Position, int> bestMouvement = make_pair(Position(), INT_MIN);
         for(pair<Position, int> pos : possibleMouvements) {
             if(pos.second > bestMouvement.second)
                 bestMouvement = pos;
@@ -63,27 +70,38 @@ pair<Position, int> Game::calculateMovement(Position position, int color, int de
     }
 }
 
-void Game::update(int posX, int posY) {
-    if(posX > 100 && posY > 100) {
-        int squareX = floor((posX - 100) / 75);
-        int squareY = floor((posY - 100) / 75);
-        if(gamePosition.get(squareX, squareY) == 2) {
-            int auxTurn = turn;
-            finished = gamePosition.addChip(squareX, squareY, turn);
-            if(!finished && turn != auxTurn){
-                draw();
-                int m = 0;
-                gamePosition = calculateMovement(gamePosition, turn, 4).first;
-                turn *= -1;
-                finished = gamePosition.noMove();
-            }
+Position Game::getHumanMovement() {
+    while(true) {
+        int posX, posY;
+        getMouse(posX, posY);
+        posX = floor((posX - 100)/75);
+        posY = floor((posY - 100)/75);
+        if(gamePosition.get(posX, posY) == 2) {
+            gamePosition.addChip(posX, posY, turn);
+            break;
+        }
+    }
+    return gamePosition;
+}
+
+void Game::update() {
+    if(turn == aiColor) {
+        gamePosition = calculateMovement(gamePosition, turn, 4).first;
+    } else {
+        gamePosition = getHumanMovement();
+    }
+    changeTurn();
+    if(gamePosition.noMove()) {
+        changeTurn();
+        if(gamePosition.noMove()) {
+            finished = true;
         }
     }
 }
 
 void Game::draw() {
     display.drawBoard();
-    display.drawChips(gamePosition.getMatrix());
+    display.drawChips(gamePosition.getMatrix(), gamePosition.getLastChip());
     display.drawScore(gamePosition.getScoreWhite(), gamePosition.getScoreBlack());
     if(finished) {
         display.drawResults(gamePosition.getScoreWhite(), gamePosition.getScoreBlack());

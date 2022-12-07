@@ -1,4 +1,4 @@
-#include "gamedisplay.h"
+#include "display.h"
 #include "math.h"
 
 Display::Display(){
@@ -28,6 +28,11 @@ void Display::drawChips(vector<vector<int>> chips) {
     }
 }
 
+void Display::drawChips(vector<vector<int>> chips, vector<int> lastChip) {
+    drawChips(chips);
+    fillCircle(IntPoint2(lastChip[0]*75 + 137, lastChip[1]*75 + 137), 5, RED);
+}
+
 void Display::drawScore(int scoreWhite, int scoreBlack) {
     drawString(IntPoint2(120,80), "Black:" + to_string(scoreBlack), BLACK, 20);
     drawString(IntPoint2(240,80), "White:" + to_string(scoreWhite), BLACK, 20);
@@ -42,16 +47,16 @@ void Display::drawResults(int scoreWhite, int scoreBlack) {
     }
 }
 
-void Display::drawSettings(bool multiPlayer, bool isWhite) {
+void Display::drawSettings(int aiColor) {
     setBackGround(GREEN);
     fillCircle(IntPoint2(WIDTH/2 - 100, HEIGHT/2 - 100), 25, WHITE);
     fillCircle(IntPoint2(WIDTH/2 + 100, HEIGHT/2 - 100), 25, BLACK);
-    drawCircle(IntPoint2(WIDTH/2 + (isWhite ? 100 : -100), HEIGHT/2 - 100), 30, RED, 5);
-    fillCircle(IntPoint2(WIDTH/2 - 100, HEIGHT/2 + 100), 25, GREY);
-    fillCircle(IntPoint2(WIDTH/2 + 100, HEIGHT/2 + 100), 25, GREY);
-    drawString(IntPoint2(WIDTH/2 - 100 - 10, HEIGHT/2 + 100 + 10), "2P", WHITE, 20);
-    drawString(IntPoint2(WIDTH/2 + 100 - 10, HEIGHT/2 + 100 + 10), "AI", WHITE, 20);
-    drawCircle(IntPoint2(WIDTH/2 + (multiPlayer ? 100 : -100), HEIGHT/2 + 100), 30, RED, 5);
+    fillCircle(IntPoint2(WIDTH/2, HEIGHT/2 - 100), 25, GREY);
+    drawCircle(IntPoint2(WIDTH/2 + aiColor*100, HEIGHT/2 - 100), 30, RED, 5);
+    drawString(IntPoint2(WIDTH/2 - 15, HEIGHT/2 - 100 + 10), "2P", WHITE, 20);
+    drawString(IntPoint2(WIDTH/2 + 100 - 12, HEIGHT/2 - 100 + 10), "AI", WHITE, 20);
+    drawString(IntPoint2(WIDTH/2 - 100 - 12, HEIGHT/2 - 100 + 10), "AI", BLACK, 20);
     fillRect(IntPoint2(WIDTH/3, HEIGHT*2/3), WIDTH/3, 100, GREY);
+    drawString(IntPoint2(WIDTH/3 + 45, HEIGHT*2/3 + 70), "START", WHITE, 50);
 }
 

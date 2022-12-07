@@ -7,27 +7,29 @@ using namespace std;
 
 
 
-Game getGame() {
-    Settings settings = Settings();
+Game getGame(Settings settings) {
     while(!settings.isReady()) {
         int posX, posY;
         getMouse(posX, posY);
         settings.update(posX, posY);
         settings.draw();
     }
-    return Game();
+    return Game(settings.getAiColor());
+}
+
+void playGame(Game game) {
+    while(!game.isFinished()) {
+        game.update();
+        game.draw();
+    }
 }
 
 int main()
 {
     while(true) {
-        Game game = getGame();
-        while(!game.isFinished()) {
-            int posX, posY;
-            getMouse(posX, posY);
-            game.update(posX, posY);
-            game.draw();
-        }
+        Settings settings = Settings();
+        Game game = getGame(settings);
+        playGame(game);
         int m;
         getMouse(m, m);
         game.exit();

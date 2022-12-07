@@ -17,8 +17,9 @@ public:
     Display();
     void drawBoard();
     void drawChips(vector<vector<int>> chips);
+    void drawChips(vector<vector<int>> chips, vector<int> lastChip);
     void drawScore(int scoreWhite, int scoreBlack);
     void drawResults(int scoreWhite, int scoreBlack);
-    void drawSettings(bool multiPlayer, bool color);
+    void drawSettings(int aiColor);
     Window getWindow() { return window; };
 };
