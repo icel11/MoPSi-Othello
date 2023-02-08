@@ -24,48 +24,64 @@ void Game::changeTurn() {
     gamePosition.setAvailable(turn);
 }
 
-int Game::calculateScore(Position position, int color) {
-    int score = 0;
-    for(int row = 0; row < 8; row++) {
-        for(int col = 0; col < 8; col++){
-            score += weightMatrix[row][col] * position.get(row, col);
-        }
+int Game::getWeightMatrixScore(Position position, int row, int col) {
+    if(((row == 1 and col == 0) or (row == 0 and col == 1) or (row == 1 and col == 1)) and abs(position.get(0,0)) == 1) {
+        return 2;
     }
-    return score * (-1);
+    if(((row == 0 and col == 6) or (row == 1 and col == 6) or (row == 1 and col == 7)) and abs(position.get(0,7)) == 1) {
+        return 2;
+    }
+    if(((row == 6 and col == 0) or (row == 6 and col == 1) or (row == 7 and col == 1)) and abs(position.get(7,0)) == 1) {
+        return 2;
+    }
+    if(((row == 6 and col == 7) or (row == 7 and col == 6) or (row == 6 and col == 6)) and abs(position.get(7,7)) == 1) {
+        return 2;
+    }
+    return weightMatrix[row][col];
 }
 
-
-int calculateScore(Position position, int color) {
+int Game::calculateScore(Position position) {
     int score = 0;
     for(int row = 0; row < 8; row++) {
         for(int col = 0; col < 8; col++){
             if(position.get(row, col) == 1) {
-                score += pow(abs(row-3.5)+abs(col-3.5), 2);
+                score += getWeightMatrixScore(position, row, col);
             }
             if(position.get(row, col) == -1) {
-                score -= pow(abs(row-3.5)+abs(col-3.5), 2);
+                score -= getWeightMatrixScore(position, row, col);
             }
         }
     }
-    return score * color;
 
-    // Trivial approach:
-    // return (position.getScoreBlack() - position.getScoreWhite()) * color;
+    //cout << "maximizing? " << turn << " " << score << endl;
+    int x, y;
+    //Imagine::getMouse(x, y);
+
+    return score;
 }
 
+pair<Position, int> Game::alfabeta(Position position, int depth, int alfa, int beta, int maximizing_player) {
+    //cout << "Depth:" << depth << endl;
+    //cout << "Maximizing player: " << maximizing_player << endl;
+    //cout << "Score: " << this->calculateScore(position) << endl;
+    //position.print();
+    if(depth == 0 || position.noMove()){
+        if(position.noMove()){
+            cout << "NO MOVES" << endl;
+        }
+        return make_pair(position, this->calculateScore(position));
 
-pair<Position, int> Game::alfabeta(Position position, int depth, int alfa, int beta, int turn, bool maximizing_player) {
-    if(depth == 0 || position.noMove())
-        return make_pair(position, this->calculateScore(position, turn));
-    if(maximizing_player) {
+    }
+    int min_player = -maximizing_player;
+    if(maximizing_player == 1) {
         pair<Position, int> value = make_pair(position, -INT_MAX);
         for(int row = 0; row < 8; row++) {
             for(int col = 0; col < 8; col++){
                 if(position.get(row, col) == 2) {
                     Position newPos(position);
-                    int auxTurn = turn;
-                    newPos.addChip(row, col, auxTurn);
-                    int new_value = alfabeta(newPos, depth-1, alfa, beta, auxTurn, false).second;
+                    newPos.addChip(row, col, maximizing_player);
+                    newPos.setAvailable(min_player);
+                    int new_value = alfabeta(newPos, depth-1, alfa, beta, -1).second;
                     if(new_value > value.second) {
                         value = make_pair(newPos, new_value);
                     }
@@ -81,12 +97,12 @@ pair<Position, int> Game::alfabeta(Position position, int depth, int alfa, int b
     else {
         pair<Position, int> value = make_pair(position, INT_MAX);
         for(int row = 0; row < 8; row++) {
-            for(int col = 0; col < 8; col++){
+            for(int col = 0; col < 8; col++) {
                 if(position.get(row, col) == 2) {
                     Position newPos(position);
-                    int auxTurn = turn;
-                    newPos.addChip(row, col, auxTurn);
-                    int new_value = alfabeta(newPos, depth-1, alfa, beta, auxTurn, true).second;
+                    newPos.addChip(row, col, maximizing_player);
+                    newPos.setAvailable(min_player);
+                    int new_value = alfabeta(newPos, depth-1, alfa, beta, 1).second;
                     if(new_value < value.second) {
                         value = make_pair(newPos, new_value);
                     }
@@ -109,6 +125,7 @@ Position Game::getHumanMovement() {
         posY = floor((posY - 100)/75);
         if(gamePosition.get(posX, posY) == 2) {
             gamePosition.addChip(posX, posY, turn);
+            cout << "Score: " << this->calculateScore(gamePosition) << endl;
             break;
         }
     }
@@ -117,7 +134,9 @@ Position Game::getHumanMovement() {
 
 void Game::update() {
     if(turn == aiColor) {
-        gamePosition = alfabeta(gamePosition, 3, -INT_MAX, INT_MAX, turn, true).first;
+        int depth = 5;
+        gamePosition = alfabeta(gamePosition, depth, -INT_MAX, INT_MAX, aiColor).first;
+        //cout << endl;
     } else {
         gamePosition = getHumanMovement();
     }

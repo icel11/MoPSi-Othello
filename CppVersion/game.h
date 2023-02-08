@@ -7,8 +7,9 @@ class Game
 private:
     Display display = Display();
     Position gamePosition;
-    int calculateScore(Position position, int color);
-    pair<Position, int> alfabeta(Position position, int depth, int alfa, int beta, int turn, bool maximizing_player);
+    int getWeightMatrixScore(Position position, int row, int col);
+    int calculateScore(Position position);
+    pair<Position, int> alfabeta(Position position, int depth, int alfa, int beta, int maximizing_player);
     Position getHumanMovement();
     bool finished = false;
     int aiColor = 0;

@@ -16,7 +16,7 @@ private:
 public:
     Position();
     Position(vector<vector<int>> position, int turn);
-    void addChip(int x, int y, int &color);
+    void addChip(int x, int y, int color);
     void setAvailable(int turn);
     int get(int x, int y) const;
     bool noMove() const;
@@ -24,4 +24,5 @@ public:
     vector<int> getLastChip() { return lastChip; };
     int getScoreBlack() { return scoreBlack; };
     int getScoreWhite() { return scoreWhite; };
+    void print() const;
 };
