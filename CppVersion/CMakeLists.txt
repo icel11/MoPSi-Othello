@@ -7,6 +7,7 @@ add_executable(Othello-Mopsi main.cpp
                 display.h display.cpp
                 settings.h settings.cpp
                 position.h position.cpp
+                strategies.h strategies.cpp
                 game.h game.cpp)
 
 ImagineUseModules(Othello-Mopsi Graphics)

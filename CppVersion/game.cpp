@@ -1,9 +1,24 @@
 #include "game.h"
 #include <map>
 #include <limits.h>
+#include <ctime>
+#include <iomanip>
 
-Game::Game(int aiColor)
+Game::Game(int colorAI1, int startegyAI1, int strategyAI2, int aiDepth)
 {
+    this->strategyAI1 = strategyAI1;
+    this->strategyAI2 = strategyAI2;
+    this->aiDepth = aiDepth;
+    reset();
+    this-> colorAI1 = colorAI1;
+    draw();
+}
+
+void Game::reset() {
+    totalChips = 0;
+    turn = 1;
+    finished = false;
+    srand(time(0));
     vector<vector<int>> chips;
     for(int row = 0; row < 8; row++) {
         vector<int> line(8);
@@ -15,8 +30,6 @@ Game::Game(int aiColor)
     chips[4][4] = -1;
 
     gamePosition = Position(chips, turn);
-    this->aiColor = aiColor;
-    draw();
 }
 
 void Game::changeTurn() {
@@ -24,53 +37,28 @@ void Game::changeTurn() {
     gamePosition.setAvailable(turn);
 }
 
-int Game::getWeightMatrixScore(Position position, int row, int col) {
-    if(((row == 1 and col == 0) or (row == 0 and col == 1) or (row == 1 and col == 1)) and abs(position.get(0,0)) == 1) {
-        return 2;
-    }
-    if(((row == 0 and col == 6) or (row == 1 and col == 6) or (row == 1 and col == 7)) and abs(position.get(0,7)) == 1) {
-        return 2;
-    }
-    if(((row == 6 and col == 0) or (row == 6 and col == 1) or (row == 7 and col == 1)) and abs(position.get(7,0)) == 1) {
-        return 2;
-    }
-    if(((row == 6 and col == 7) or (row == 7 and col == 6) or (row == 6 and col == 6)) and abs(position.get(7,7)) == 1) {
-        return 2;
-    }
-    return weightMatrix[row][col];
-}
-
-int Game::calculateScore(Position position) {
+int Game::calculateScore(Position position, int strategy) {
     int score = 0;
     for(int row = 0; row < 8; row++) {
         for(int col = 0; col < 8; col++){
             if(position.get(row, col) == 1) {
-                score += getWeightMatrixScore(position, row, col);
+                score += strategies.getWeightMatrixScore(strategy, position, row, col, totalChips);
             }
             if(position.get(row, col) == -1) {
-                score -= getWeightMatrixScore(position, row, col);
+                score -= strategies.getWeightMatrixScore(strategy, position, row, col, totalChips);
             }
         }
     }
-
-    //cout << "maximizing? " << turn << " " << score << endl;
-    int x, y;
-    //Imagine::getMouse(x, y);
-
     return score;
 }
 
-pair<Position, int> Game::alfabeta(Position position, int depth, int alfa, int beta, int maximizing_player) {
+pair<Position, int> Game::alfabeta(Position position, int depth, int alfa, int beta, int maximizing_player, int strategy) {
     //cout << "Depth:" << depth << endl;
     //cout << "Maximizing player: " << maximizing_player << endl;
     //cout << "Score: " << this->calculateScore(position) << endl;
     //position.print();
     if(depth == 0 || position.noMove()){
-        if(position.noMove()){
-            cout << "NO MOVES" << endl;
-        }
-        return make_pair(position, this->calculateScore(position));
-
+        return make_pair(position, this->calculateScore(position, strategy));
     }
     int min_player = -maximizing_player;
     if(maximizing_player == 1) {
@@ -81,9 +69,14 @@ pair<Position, int> Game::alfabeta(Position position, int depth, int alfa, int b
                     Position newPos(position);
                     newPos.addChip(row, col, maximizing_player);
                     newPos.setAvailable(min_player);
-                    int new_value = alfabeta(newPos, depth-1, alfa, beta, -1).second;
-                    if(new_value > value.second) {
-                        value = make_pair(newPos, new_value);
+                    int new_value = alfabeta(newPos, depth-1, alfa, beta, -1, strategy).second;
+                    if(new_value >= value.second) {
+                        if(new_value == value.second) {
+                            if(rand() % 2 == 0)
+                                value = make_pair(newPos, new_value);
+                        } else {
+                            value = make_pair(newPos, new_value);
+                        }
                     }
                     if(value.second > beta) {
                         break;
@@ -102,9 +95,14 @@ pair<Position, int> Game::alfabeta(Position position, int depth, int alfa, int b
                     Position newPos(position);
                     newPos.addChip(row, col, maximizing_player);
                     newPos.setAvailable(min_player);
-                    int new_value = alfabeta(newPos, depth-1, alfa, beta, 1).second;
+                    int new_value = alfabeta(newPos, depth-1, alfa, beta, 1, strategy).second;
                     if(new_value < value.second) {
-                        value = make_pair(newPos, new_value);
+                        if(new_value == value.second) {
+                            if(rand() % 2 == 0)
+                                value = make_pair(newPos, new_value);
+                        } else {
+                            value = make_pair(newPos, new_value);
+                        }
                     }
                     if(value.second < alfa) {
                         break;
@@ -125,7 +123,6 @@ Position Game::getHumanMovement() {
         posY = floor((posY - 100)/75);
         if(gamePosition.get(posX, posY) == 2) {
             gamePosition.addChip(posX, posY, turn);
-            cout << "Score: " << this->calculateScore(gamePosition) << endl;
             break;
         }
     }
@@ -133,12 +130,11 @@ Position Game::getHumanMovement() {
 }
 
 void Game::update() {
-    if(turn == aiColor) {
-        int depth = 5;
-        gamePosition = alfabeta(gamePosition, depth, -INT_MAX, INT_MAX, aiColor).first;
-        //cout << endl;
+    totalChips++;
+    if(turn == colorAI1) {
+        gamePosition = alfabeta(gamePosition, aiDepth, -INT_MAX, INT_MAX, turn, strategyAI1).first;
     } else {
-        gamePosition = getHumanMovement();
+        gamePosition = alfabeta(gamePosition, aiDepth, -INT_MAX, INT_MAX, turn, strategyAI2).first;
     }
     changeTurn();
     if(gamePosition.noMove()) {
@@ -163,3 +159,23 @@ void Game::exit() {
     clearWindow();
     closeWindow(display.getWindow());
 }
+
+void Game::logResults() {
+    cout << "Game result: ";
+    if(getWinner() == 1)
+        cout << "black won";
+    if(getWinner() == -1)
+        cout << "white won";
+    if(getWinner() == 0)
+        cout << "draw";
+    cout << " " << colorAI1 << " has the first strategy" << endl;
+}
+
+int Game::getWinner() {
+    if(gamePosition.getScoreBlack() > gamePosition.getScoreWhite())
+        return 1;
+    if(gamePosition.getScoreBlack() < gamePosition.getScoreWhite())
+        return -1;
+    return 0;
+}
+

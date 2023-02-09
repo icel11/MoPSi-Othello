@@ -1,35 +1,32 @@
 #pragma once
 #include "display.h"
 #include "position.h"
+#include "strategies.h"
 
 class Game
 {
 private:
     Display display = Display();
     Position gamePosition;
-    int getWeightMatrixScore(Position position, int row, int col);
-    int calculateScore(Position position);
-    pair<Position, int> alfabeta(Position position, int depth, int alfa, int beta, int maximizing_player);
+    int calculateScore(Position position, int strategy);
+    pair<Position, int> alfabeta(Position position, int depth, int alfa, int beta, int maximizing_player, int strategy=1);
     Position getHumanMovement();
     bool finished = false;
-    int aiColor = 0;
+    int aiDepth = 2;
+    int strategyAI1, strategyAI2;
+    int colorAI1 = 1;
     int turn = 1;
-    int weightMatrix[8][8] = {{100,-25, 10,  5,  5, 10,-25, 100},
-                              {-25,-25,  2,  2,  2,  2,-25, -25},
-                              { 10,  2,  5,  1,  1,  5,  2,  10},
-                              {  5,  2,  1,  2,  2,  1,  2,   5},
-                              {  5,  2,  1,  2,  2,  1,  2,   5},
-                              { 10,  2,  5,  1,  1,  5,  2,  10},
-                              {-25,-25,  2,  2,  2,  2,-25, -25},
-                              {100,-25, 10,  5,  5, 10,-25, 100}};
-
+    int totalChips = 0;
+    Strategies strategies;
     void changeTurn();
 public:
-    Game(int aiColor);
+    Game(int colorAI1, int strategyAI1, int strategyAI2, int aiDepth);
     void update();
     void draw();
     void reset();
     void exit();
+    void logResults();
     bool isFinished() { return finished; };
+    int getWinner();
 };
 
