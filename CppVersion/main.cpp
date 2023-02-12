@@ -6,7 +6,9 @@ using namespace Imagine;
 using namespace std;
 
 
-
+/**
+ * Initial menu loop, until the user selects the settings and starts the game.
+ */
 Game getGame(Settings settings) {
     while(!settings.isReady()) {
         int posX, posY;
@@ -17,6 +19,9 @@ Game getGame(Settings settings) {
     return Game(settings.getAiColor());
 }
 
+/**
+ *  Game loop
+ */
 void playGame(Game game) {
     while(!game.isFinished()) {
         game.update();
