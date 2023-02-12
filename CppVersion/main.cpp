@@ -24,6 +24,10 @@ void playGame(Game game) {
     }
 }
 
+/**
+ * main will loop indefinitely through the setting and game. Any click after the game is finished will
+ * restart the window and go to the settings menu again.
+ */
 int main()
 {
     while(true) {

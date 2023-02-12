@@ -52,25 +52,12 @@ int Game::calculateScore(Position position) {
             }
         }
     }
-
-    //cout << "maximizing? " << turn << " " << score << endl;
-    int x, y;
-    //Imagine::getMouse(x, y);
-
     return score;
 }
 
 pair<Position, int> Game::alfabeta(Position position, int depth, int alfa, int beta, int maximizing_player) {
-    //cout << "Depth:" << depth << endl;
-    //cout << "Maximizing player: " << maximizing_player << endl;
-    //cout << "Score: " << this->calculateScore(position) << endl;
-    //position.print();
     if(depth == 0 || position.noMove()){
-        if(position.noMove()){
-            cout << "NO MOVES" << endl;
-        }
         return make_pair(position, this->calculateScore(position));
-
     }
     int min_player = -maximizing_player;
     if(maximizing_player == 1) {
@@ -125,7 +112,6 @@ Position Game::getHumanMovement() {
         posY = floor((posY - 100)/75);
         if(gamePosition.get(posX, posY) == 2) {
             gamePosition.addChip(posX, posY, turn);
-            cout << "Score: " << this->calculateScore(gamePosition) << endl;
             break;
         }
     }
@@ -136,7 +122,6 @@ void Game::update() {
     if(turn == aiColor) {
         int depth = 5;
         gamePosition = alfabeta(gamePosition, depth, -INT_MAX, INT_MAX, aiColor).first;
-        //cout << endl;
     } else {
         gamePosition = getHumanMovement();
     }
