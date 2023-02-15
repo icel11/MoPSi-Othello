@@ -6,7 +6,9 @@ using namespace Imagine;
 using namespace std;
 
 
-
+/**
+ * Initial menu loop, until the user selects the settings and starts the game.
+ */
 Game getGame(Settings settings) {
     while(!settings.isReady()) {
         int posX, posY;
@@ -17,6 +19,9 @@ Game getGame(Settings settings) {
     return Game(settings.getAiColor());
 }
 
+/**
+ *  Game loop
+ */
 void playGame(Game game) {
     while(!game.isFinished()) {
         game.update();
@@ -24,6 +29,10 @@ void playGame(Game game) {
     }
 }
 
+/**
+ * main will loop indefinitely through the setting and game. Any click after the game is finished will
+ * restart the window and go to the settings menu again.
+ */
 int main()
 {
     while(true) {

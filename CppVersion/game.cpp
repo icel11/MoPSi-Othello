@@ -13,6 +13,7 @@ Game::Game(int aiColor)
     chips[3][4] = 1;
     chips[4][3] = 1;
     chips[4][4] = -1;
+
     gamePosition = Position(chips, turn);
     this->aiColor = aiColor;
     draw();
@@ -23,50 +24,83 @@ void Game::changeTurn() {
     gamePosition.setAvailable(turn);
 }
 
+int Game::getWeightMatrixScore(Position position, int row, int col) {
+    if(((row == 1 and col == 0) or (row == 0 and col == 1) or (row == 1 and col == 1)) and abs(position.get(0,0)) == 1) {
+        return 2;
+    }
+    if(((row == 0 and col == 6) or (row == 1 and col == 6) or (row == 1 and col == 7)) and abs(position.get(0,7)) == 1) {
+        return 2;
+    }
+    if(((row == 6 and col == 0) or (row == 6 and col == 1) or (row == 7 and col == 1)) and abs(position.get(7,0)) == 1) {
+        return 2;
+    }
+    if(((row == 6 and col == 7) or (row == 7 and col == 6) or (row == 6 and col == 6)) and abs(position.get(7,7)) == 1) {
+        return 2;
+    }
+    return weightMatrix[row][col];
+}
 
-int calculateScore(Position position, int color) {
+int Game::calculateScore(Position position) {
     int score = 0;
     for(int row = 0; row < 8; row++) {
         for(int col = 0; col < 8; col++){
             if(position.get(row, col) == 1) {
-                score += abs(row-3.5)+abs(col-3.5);
+                score += getWeightMatrixScore(position, row, col);
             }
             if(position.get(row, col) == -1) {
-                score -= abs(row-3.5)+abs(col-3.5);
+                score -= getWeightMatrixScore(position, row, col);
             }
         }
     }
-    return score * color;
-
-    // Trivial approach:
-    // return (position.getScoreBlack() - position.getScoreWhite()) * color;
+    return score;
 }
 
-
-pair<Position, int> Game::calculateMovement(Position position, int color, int depth) {
-    if(depth == 0)
-        return make_pair(position, calculateScore(position, color));
-    else {
-        vector<pair<Position, int>> possibleMouvements;
+pair<Position, int> Game::alfabeta(Position position, int depth, int alfa, int beta, int maximizing_player) {
+    if(depth == 0 || position.noMove()){
+        return make_pair(position, this->calculateScore(position));
+    }
+    int min_player = -maximizing_player;
+    if(maximizing_player == 1) {
+        pair<Position, int> value = make_pair(position, -INT_MAX);
         for(int row = 0; row < 8; row++) {
             for(int col = 0; col < 8; col++){
                 if(position.get(row, col) == 2) {
                     Position newPos(position);
-                    int auxColor = color;
-                    newPos.addChip(row, col, auxColor);
-                    possibleMouvements.push_back(make_pair(newPos, calculateMovement(newPos, auxColor, depth - 1).second));
+                    newPos.addChip(row, col, maximizing_player);
+                    newPos.setAvailable(min_player);
+                    int new_value = alfabeta(newPos, depth-1, alfa, beta, -1).second;
+                    if(new_value > value.second) {
+                        value = make_pair(newPos, new_value);
+                    }
+                    if(value.second > beta) {
+                        break;
+                    }
+                    alfa = max(alfa, value.second);
                 }
             }
         }
-        if(possibleMouvements.empty()) {
-            return make_pair(position, calculateScore(position, color));
+        return value;
+    }
+    else {
+        pair<Position, int> value = make_pair(position, INT_MAX);
+        for(int row = 0; row < 8; row++) {
+            for(int col = 0; col < 8; col++) {
+                if(position.get(row, col) == 2) {
+                    Position newPos(position);
+                    newPos.addChip(row, col, maximizing_player);
+                    newPos.setAvailable(min_player);
+                    int new_value = alfabeta(newPos, depth-1, alfa, beta, 1).second;
+                    if(new_value < value.second) {
+                        value = make_pair(newPos, new_value);
+                    }
+                    if(value.second < alfa) {
+                        break;
+                    }
+                    beta = min(beta, value.second);
+                }
+            }
         }
-        pair<Position, int> bestMouvement = make_pair(Position(), INT_MIN);
-        for(pair<Position, int> pos : possibleMouvements) {
-            if(pos.second > bestMouvement.second)
-                bestMouvement = pos;
-        }
-        return bestMouvement;
+        return value;
     }
 }
 
@@ -86,7 +120,8 @@ Position Game::getHumanMovement() {
 
 void Game::update() {
     if(turn == aiColor) {
-        gamePosition = calculateMovement(gamePosition, turn, 4).first;
+        int depth = 5;
+        gamePosition = alfabeta(gamePosition, depth, -INT_MAX, INT_MAX, aiColor).first;
     } else {
         gamePosition = getHumanMovement();
     }

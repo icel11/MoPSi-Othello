@@ -1,4 +1,8 @@
 #include "position.h"
+#include <iomanip>
+#include <iostream>
+
+using namespace std;
 
 Position::Position() {}
 
@@ -60,7 +64,7 @@ void Position::setAvailable(int color) {
     }
 }
 
-void Position::addChip(int posX_0, int posY_0, int &color) {
+void Position::addChip(int posX_0, int posY_0, int color) {
     set(posX_0, posY_0, color);
     lastChip = {posX_0, posY_0};
     for(vector<int> direction : DIRECTIONS){
@@ -92,4 +96,14 @@ bool Position::noMove() const {
             if(matrix[row][col] == 2)
                 return false;
     return true;
+}
+
+void Position::print() const {
+    std::cout<<endl;
+    for(int row = 0; row < 8; row++) {
+        for(int col = 0; col < 8; col++) {
+            cout << setw(3) << get(col, row);
+        }
+        cout << endl;
+    }
 }
